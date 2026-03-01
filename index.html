@@ -177,6 +177,29 @@
     ]
   }
   </script>
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      macros: {
+        bm: ["\\boldsymbol{#1}", 1] // 这是一个妙招：手动定义 \bm 为 \boldsymbol
+      }
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    },
+    startup: {
+      pageReady: () => {
+        return MathJax.startup.defaultPageReady().then(() => {
+          console.log('MathJax 渲染完成');
+        });
+      }
+    }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
 </head>
 <body>
 
@@ -241,24 +264,36 @@
         <div class="columns is-centered">
           <div class="column has-text-centered">
             <!-- TODO: Replace with your paper title -->
-            <h1 class="title is-1 publication-title">Academic Project Page</h1>
-            <div class="is-size-5 publication-authors">
-              <!-- TODO: Replace with your paper authors and their personal links -->
-              <span class="author-block">
-                <a href="FIRST AUTHOR PERSONAL LINK" target="_blank">First Author</a><sup>*</sup>,</span>
-                <span class="author-block">
-                  <a href="SECOND AUTHOR PERSONAL LINK" target="_blank">Second Author</a><sup>*</sup>,</span>
-                  <span class="author-block">
-                    <a href="THIRD AUTHOR PERSONAL LINK" target="_blank">Third Author</a>
-                  </span>
-                  </div>
+            <h1 class="title is-1 publication-title">FDC-MPPI: Fast Disturbance-Compensated MPPI for Onboard
+Quadruped Navigation in Cluttered and Disturbed Environments</h1>
 
-                  <div class="is-size-5 publication-authors">
+          <!-- Submission note -->
+          <p class="submission-note">
+            This paper has been submitted to the IEEE/RSJ International Conference on INTELLIGENT ROBOTS & SYSTEMS (IROS) 2026
+          </p>
+            <!-- <div class="is-size-5 publication-authors"> -->
+              <!-- TODO: Replace with your paper authors and their personal links -->
+              <!-- <span class="author-block"> -->
+                <!-- <a href="FIRST AUTHOR PERSONAL LINK" target="_blank">First Author</a><sup>*</span> -->
+                <!-- <span class="author-block"> -->
+                  <!-- <a href="SECOND AUTHOR PERSONAL LINK" target="_blank">Second Author</a><sup>*</sup>,</span> -->
+                  <!-- <span class="author-block"> -->
+                    <!-- <a href="THIRD AUTHOR PERSONAL LINK" target="_blank">Third Author</a> -->
+                  <!-- </span> -->
+                  <!-- </div> -->
+
+
+          <!-- Anonymous review note -->
+          <p class="review-note">
+            * All author information is removed due to review policy reasons
+          </p>
+
+                  <!-- <div class="is-size-5 publication-authors"> -->
                     <!-- TODO: Replace with your institution and conference/journal info -->
-                    <span class="author-block">Institution Name<br>Conference name and year</span>
+                    <!-- <span class="author-block">Institution Name<br>Conference name and year</span> -->
                     <!-- TODO: Remove this line if no equal contribution -->
-                    <span class="eql-cntrb"><small><br><sup>*</sup>Indicates Equal Contribution</small></span>
-                  </div>
+                    <!-- <span class="eql-cntrb"><small><br><sup>*</sup>Indicates Equal Contribution</small></span> -->
+                  <!-- </div> -->
 
                   <div class="column has-text-centered">
                     <div class="publication-links">
@@ -267,14 +302,14 @@
                         <a href="https://arxiv.org/pdf/<ARXIV PAPER ID>.pdf" target="_blank"
                         class="external-link button is-normal is-rounded is-dark">
                         <span class="icon">
-                          <i class="fas fa-file-pdf"></i>
+                          <i class="fas fa-file-video"></i>
                         </span>
-                        <span>Paper</span>
+                        <span>Video</span>
                       </a>
                     </span>
 
                     <!-- TODO: Add your supplementary material PDF or remove this section -->
-                    <span class="link-block">
+                    <!-- <span class="link-block">
                       <a href="static/pdfs/supplementary_material.pdf" target="_blank"
                       class="external-link button is-normal is-rounded is-dark">
                       <span class="icon">
@@ -282,10 +317,10 @@
                       </span>
                       <span>Supplementary</span>
                     </a>
-                  </span>
+                  </span> -->
 
                   <!-- TODO: Replace with your GitHub repository URL -->
-                  <span class="link-block">
+                  <!-- <span class="link-block">
                     <a href="https://github.com/YOUR REPO HERE" target="_blank"
                     class="external-link button is-normal is-rounded is-dark">
                     <span class="icon">
@@ -293,10 +328,22 @@
                     </span>
                     <span>Code</span>
                   </a>
+                </span> -->
+
+              <span class="link-block">
+              <a class="external-link button is-normal is-rounded is-dark
+                        has-tooltip-bottom"
+                title="The code will be released upon acceptance of this work.">
+                <span class="icon">
+                  <i class="fab fa-github"></i>
                 </span>
+                <span>Code</span>
+              </a>
+            </span>
+          </div>
 
                 <!-- TODO: Update with your arXiv paper ID -->
-                <span class="link-block">
+                <!-- <span class="link-block">
                   <a href="https://arxiv.org/abs/<ARXIV PAPER ID>" target="_blank"
                   class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
@@ -304,7 +351,7 @@
                   </span>
                   <span>arXiv</span>
                 </a>
-              </span>
+              </span> -->
             </div>
           </div>
         </div>
@@ -315,72 +362,197 @@
 
 
 <!-- Teaser video-->
-<section class="hero teaser">
+<!-- <section class="hero teaser">
   <div class="container is-max-desktop">
-    <div class="hero-body">
+    <div class="hero-body"> -->
       <!-- TODO: Replace with your teaser video -->
-      <video poster="" id="tree" autoplay controls muted loop height="100%" preload="metadata">
+      <!-- <video poster="" id="tree" autoplay controls muted loop height="100%" preload="metadata"> -->
         <!-- TODO: Add your video file path here -->
-        <source src="static/videos/banner_video.mp4" type="video/mp4">
-      </video>
+        <!-- <source src="static/videos/banner_video.mp4" type="video/mp4">
+      </video> -->
       <!-- TODO: Replace with your video description -->
-      <h2 class="subtitle has-text-centered">
+      <!-- <h2 class="subtitle has-text-centered">
         Aliquam vitae elit ullamcorper tellus egestas pellentesque. Ut lacus tellus, maximus vel lectus at, placerat pretium mi. Maecenas dignissim tincidunt vestibulum. Sed consequat hendrerit nisl ut maximus. 
       </h2>
     </div>
   </div>
-</section>
+</section> -->
 <!-- End teaser video -->
-
-<!-- Paper abstract -->
-<section class="section hero is-light">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
-        <div class="content has-text-justified">
-          <!-- TODO: Replace with your paper abstract -->
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ullamcorper tellus sed ante aliquam tempus. Etiam porttitor urna feugiat nibh elementum, et tempor dolor mattis. Donec accumsan enim augue, a vulputate nisi sodales sit amet. Proin bibendum ex eget mauris cursus euismod nec et nibh. Maecenas ac gravida ante, nec cursus dui. Vivamus purus nibh, placerat ac purus eget, sagittis vestibulum metus. Sed vestibulum bibendum lectus gravida commodo. Pellentesque auctor leo vitae sagittis suscipit.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-<!-- End paper abstract -->
 
 
 <!-- Image carousel -->
 <section class="hero is-small">
   <div class="hero-body">
     <div class="container">
-      <div id="results-carousel" class="carousel results-carousel">
-       <div class="item">
-        <!-- TODO: Replace with your research result images -->
-        <img src="static/images/carousel1.jpg" alt="First research result visualization" loading="lazy"/>
-        <!-- TODO: Replace with description of this result -->
-        <h2 class="subtitle has-text-centered">
-          First image description.
-        </h2>
+      <!-- <div id="results-carousel" class="carousel results-carousel"> -->
+        <figure class="paper-figure">
+        <img src="static/images/system.png" alt="Overview figure">
+
+        <figcaption class="paper-caption">
+          Fig. 1:
+          <strong> Framework of the proposed FDC-MPPI.</strong>
+           It first utilizes FR-MHE to estimate global-frame disturbance compensation coefficients \( {}_{\mathcal{G}}\boldsymbol{\mu} \) 
+           by fusing odometer-derived robot poses with the equivalent control input ${}_{\mathcal{G}}\bm{\tilde{u}} _{\text{MPPI}}$. 
+           These coefficients are then mapped to body-frame gains ${}_{\mathcal{B}}\bm{\mu}$ and embedded into the MPPI rollout model to actively rectify trajectory predictions against environmental perturbations. 
+           Finally, the MPPI controller evaluates \(N\) parallel rollouts and calculates the optimal body-frame control input $u_{\text{MPPI}}$ through a weighted averaging process, which is then executed by the low-level controller.
+      </figure>
+      <!-- <div class="item" style="margin-top: 3rem; text-align: center;">
+        <img src="static/images/table.png" alt="PRED-MPPI table"
+                        style="max-width: 80%; height: auto;"> -->
+        
+        <!-- <h2 class="subtitle has-text-centered">
+          Comparison between baseline MPPI and the proposed PRED-MPPI under fan-induced wind disturbance.
+        </h2> -->
+      <!-- </div> -->
+  <!-- </div> -->
+</div>
+</div>
+</section>
+<!-- End image carousel -->
+
+<style>
+#results-carousel img {
+  max-width: 100% !important;  
+  width: 100%;      
+  height: auto;            
+  display: block;
+  margin: 0 auto;
+}
+</style>
+
+<!-- Abstract & Contributions -->
+<section class="section hero is-light">
+  <div class="container is-fullhd">
+
+    <div class="columns is-variable is-8">
+
+      <!-- Abstract (Left) -->
+      <div class="column is-8">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified" style="font-size: 1.4rem; line-height: 1.65;">
+          <p>
+              Quadruped robots struggle with reliable autonomous navigation in cluttered, narrow and disturbed environments because robot system and terrain-induced disturbances
+              (e.g., slippage, traction loss, external pushes) cause a time-varying mismatch between navigation model and real system, which degrades model Predictive Path Integral (MPPI) rollouts and
+              leads to oscillations or collisions. This paper presents FDC-MPPI (Fast Disturbance-Compensated MPPI), an integrated planning-control framework that explicitly fuses real-time odometry feedback into the MPPI rollout model via a Fast and
+              Robust Moving Horizon Estimation (FR-MHE) module. FR-MHE estimates disturbance compensation coefficients from the equivalent control input and measured robot pose, maps them
+              to body-frame gains, and embeds them into the MPPI model to correct rollouts online while obstacle costs are efficiently queried from an Euclidean Distance Transform-based distance
+              field. With GPU parallelization and a decoupled control-sampling architecture, FDC-MPPI achieves a 150 Hz onboard update rate
+              on an NVIDIA Jetson Orin NX 16GB (average latency 2.42 ms, FR-MHE 0.84 ms). Comparative Gazebo simulations and
+              real-world experiments on a Unitree GO2 EDU demonstrate substantially improved robustness and safety across slippery
+              slopes, outdoor lawn, and significant external forces, boosting success rates from 10%/25% (sim/real) for the Vanilla MPPI to 100%/90%, while increasing obstacle clearance and reducing
+              trajectory tracking error and curvature—enabling agile, stable, and collision-resistant quadrupedal navigation under severe model mismatch and disturbances.
+          </p>
+        </div>
       </div>
-      <div class="item">
+
+      <!-- Contributions (Right) -->
+      <div class="column is-4">
+        <h2 class="title is-3">Contributions</h2>
+        <div class="content" style="font-size: 1.4rem; line-height: 1.65;">
+          <ol>
+            <li>
+              <strong>FDC-MPPI framework:</strong>
+We propose FDC-MPPI, which enhances quadrupedal navigation stability and safety by
+explicitly integrating a real-time disturbance compensation mechanism into MPPI rollouts.
+            </li>
+            <li>
+              <strong>FR-MHE for disturbance compensation:</strong>
+              We integrate a computationally efficient and robust FR-MHE module
+with MPPI to actively mitigate environmental perturbations and velocity fluctuations.
+            </li>
+            <li>
+              <strong>Comparative onboard validation:</strong>
+              Extensive simulations and hardware experiments verify algorithm robustness and computational efficiency (2.42ms MPPI computation and 150 Hz) in narrow, cluttered, and disturbed
+environments.
+            </li>
+            <li>
+              <strong>Open-source code repository:</strong>
+We will provide an open source implementation of the MPPI-based local obstacle
+avoidance algorithm for quadruped robots.
+            </li>
+
+          </ol>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+<!-- End Abstract & Contributions -->
+
+<hr class="section-divider">
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+
+      <!-- Common big title -->
+      <h1 class="title is-2 has-text-centered">COMPARATIVE EXPERIMENTS</h1>
+
+      <h2 class="title is-4 has-text-left mt-5">
+        A.FDC-MPPI for dynamic obstacle avoidance
+      </h2>
+      <!-- Part 2 -->
+      <div class="columns is-centered mt-4">
+        <div class="column is-three-quarters">
+          <div class="publication-video">
+            <video id="dynamic-obstacle-video" autoplay controls muted loop playsinline height="100%">
+              <source src="static/videos/web-deynamic-obs.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          <p class="help has-text-centered is-size-6 mt-3">
+            Onboard performance of FDC-MPPI during dynamic obstacle avoidance on the <strong>Unitree Go2</strong> platform. 
+            The system maintains a <strong>150 Hz</strong> update rate on the <strong>Jetson Orin NX</strong>.
+          </p>
+        </div>
+      </div>
+
+      <h2 class="title is-4 has-text-left mt-5">
+        B.Continuous and Slippery Slopes
+      </h2>
+
+      <h2 class="title is-4 has-text-left mt-5">
+        C.Outdoor Lawn
+      </h2>
+
+      <h2 class="title is-4 has-text-left mt-5">
+        D.Significant External Forces
+      </h2>
+      
+    </div>
+  </div>
+</section>
+
+<!-- Image carousel -->
+<!-- <section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <div id="results-carousel" class="carousel results-carousel">
+       <div class="item"> -->
+        <!-- TODO: Replace with your research result images -->
+        <!-- <img src="static/images/carousel1.jpg" alt="First research result visualization" loading="lazy"/> -->
+        <!-- TODO: Replace with description of this result -->
+        <!-- <h2 class="subtitle has-text-centered">
+          First image description. -->
+        <!-- </h2>
+      </div>
+      <div class="item"> -->
         <!-- Your image here -->
-        <img src="static/images/carousel2.jpg" alt="Second research result visualization" loading="lazy"/>
+        <!-- <img src="static/images/carousel2.jpg" alt="Second research result visualization" loading="lazy"/>
         <h2 class="subtitle has-text-centered">
           Second image description.
         </h2>
       </div>
-      <div class="item">
+      <div class="item"> -->
         <!-- Your image here -->
-        <img src="static/images/carousel3.jpg" alt="Third research result visualization" loading="lazy"/>
+        <!-- <img src="static/images/carousel3.jpg" alt="Third research result visualization" loading="lazy"/>
         <h2 class="subtitle has-text-centered">
          Third image description.
        </h2>
      </div>
-     <div class="item">
+     <div class="item"> -->
       <!-- Your image here -->
-      <img src="static/images/carousel4.jpg" alt="Fourth research result visualization" loading="lazy"/>
+      <!-- <img src="static/images/carousel4.jpg" alt="Fourth research result visualization" loading="lazy"/>
       <h2 class="subtitle has-text-centered">
         Fourth image description.
       </h2>
@@ -388,90 +560,82 @@
   </div>
 </div>
 </div>
-</section>
+</section> -->
 <!-- End image carousel -->
 
-
-
-
 <!-- Youtube video -->
-<section class="hero is-small is-light">
+<!-- <section class="hero is-small is-light">
   <div class="hero-body">
-    <div class="container">
+    <div class="container"> -->
       <!-- Paper video. -->
-      <h2 class="title is-3">Video Presentation</h2>
+      <!-- <h2 class="title is-3">Video Presentation</h2>
       <div class="columns is-centered has-text-centered">
-        <div class="column is-four-fifths">
+        <div class="column is-four-fifths"> -->
           
-          <div class="publication-video">
+          <!-- <div class="publication-video"> -->
             <!-- TODO: Replace with your YouTube video ID -->
-            <iframe src="https://www.youtube.com/embed/JkaxUblCGz0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            <!-- <iframe src="https://www.youtube.com/embed/JkaxUblCGz0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
           </div>
         </div>
       </div>
     </div>
   </div>
-</section>
+</section> -->
 <!-- End youtube video -->
 
 
 <!-- Video carousel -->
-<section class="hero is-small">
+<!-- <section class="hero is-small">
   <div class="hero-body">
     <div class="container">
       <h2 class="title is-3">Another Carousel</h2>
       <div id="results-carousel" class="carousel results-carousel">
-        <div class="item item-video1">
+        <div class="item item-video1"> -->
           <!-- TODO: Add poster image for better preview -->
-          <video poster="" id="video1" controls muted loop height="100%" preload="metadata">
+          <!-- <video poster="" id="video1" controls muted loop height="100%" preload="metadata"> -->
             <!-- Your video file here -->
-            <source src="static/videos/carousel1.mp4" type="video/mp4">
+            <!-- <source src="static/videos/carousel1.mp4" type="video/mp4">
           </video>
         </div>
-        <div class="item item-video2">
+        <div class="item item-video2"> -->
           <!-- TODO: Add poster image for better preview -->
-          <video poster="" id="video2" controls muted loop height="100%" preload="metadata">
+          <!-- <video poster="" id="video2" controls muted loop height="100%" preload="metadata"> -->
             <!-- Your video file here -->
-            <source src="static/videos/carousel2.mp4" type="video/mp4">
+            <!-- <source src="static/videos/carousel2.mp4" type="video/mp4">
           </video>
         </div>
-        <div class="item item-video3">
+        <div class="item item-video3"> -->
           <!-- TODO: Add poster image for better preview -->
-          <video poster="" id="video3" controls muted loop height="100%" preload="metadata">
+          <!-- <video poster="" id="video3" controls muted loop height="100%" preload="metadata"> -->
             <!-- Your video file here -->
-            <source src="static/videos/carousel3.mp4" type="video/mp4">
+            <!-- <source src="static/videos/carousel3.mp4" type="video/mp4">
           </video>
         </div>
       </div>
     </div>
   </div>
-</section>
+</section> -->
 <!-- End video carousel -->
 
-
-
-
-
-
 <!-- Paper poster -->
-<section class="hero is-small is-light">
+<!-- <section class="hero is-small is-light">
   <div class="hero-body">
     <div class="container">
-      <h2 class="title">Poster</h2>
+      <h2 class="title">Poster</h2> -->
 
       <!-- TODO: Replace with your poster PDF -->
-      <iframe  src="static/pdfs/sample.pdf" width="100%" height="550">
+      <!-- <iframe  src="static/pdfs/sample.pdf" width="100%" height="550">
           </iframe>
         
       </div>
     </div>
-  </section>
+  </section> -->
 <!--End paper poster -->
 
 
 
 <!--BibTex citation -->
-  <section class="section" id="BibTeX">
+  <!-- <section class="section" id="BibTeX">
     <div class="container is-max-desktop content">
       <div class="bibtex-header">
         <h2 class="title">BibTeX</h2>
@@ -488,7 +652,7 @@
   url={https://your-domain.com/your-project-page}
 }</code></pre>
     </div>
-</section>
+</section> -->
 <!--End BibTex citation -->
 
 
