@@ -589,9 +589,50 @@ the commanded velocity.
         </div>
       </div>
 
+      <div class="columns is-vcentered mt-5">
+        <div class="column is-6">
+            <div class="content" style="font-size: 1.4rem; line-height: 1.65;">
+            <h3 class="title is-4">Experimental Analysis</h3>
+            <p>
+             The picture on the right presents a comparison between the odometry poses (solid lines) 
+             and the ideal trajectories derived from the FDC-MPPI control inputs (dashed lines) in the $X$-$Y$ plane. 
+             By augmenting the system model with ${}_{\mathcal{B}}\bm{\mu}$, the robot's actual motion profile aligns more closely with the reference trajectory. 
+             This demonstrates a superior response to high-level velocity commands. 
+            <p>
+             As shown in the table below, we compute the RMSE to quantify the closeness between the ideal trajectory and the actual trajectory, 
+             and use it to evaluate the robot's execution of the upper-level control quantities computed by FDC-MPPI. The mean curvature is calculated as a geometric smoothness metric. 
+            While the Vanilla motion exhibits high-frequency directional shifts due to uncompensated disturbances, the FDC-MPPI maintains a lower average curvature. 
+            </p>
+          </div>
+          <figure class="image mt-4">
+            <img src="static/images/lawntable.png" alt="Additional analysis figure">
+          </figure>
+        </div>
+
+        <div class="column is-6">
+          <figure class="image">
+            <img src="static/images/curve.png" alt="Lawn experiment analysis" >
+
+            <figcaption class="has-text-centered is-size-6 mt-2">
+            Fig. 2: 
+            Comparative trajectory tracking performance on slippery lawn.
+          </figcaption>
+          </figure>
+        </div>
+      </div>
+
       <h2 class="title is-4 has-text-left mt-5">
         D.Significant External Forces
       </h2>
+
+      <div class="content has-text-black" style="font-size: 1.4rem; line-height: 1.65; margin-bottom: 2rem;">
+        <p>
+          For more intense disturbances, external forces are manually applied to the quadruped robot during autonomous obstacle avoidance. These external forces cause sudden jumps in
+            the robot’s displacement and velocity. Thanks to the high frequency update mechanism of FDC-MPPI, the robot success
+            fully navigates around obstacles even when subjected to abrupt state changes. 
+        </p>
+      </div>
+
         <div class="columns is-centered mt-4">
         <div class="column is-three-quarters">
           <div class="publication-video">
