@@ -19,7 +19,7 @@
     <build_export_depend>robot_state_publisher</build_export_depend>
     <build_export_depend>roscpp</build_export_depend>
     <build_export_depend>std_msgs</build_export_depend>
-    <build_depend>nav_msgs</build_depend>  <!-- 新增：MPPI需要的代价地图消息依赖 -->
+    <build_depend>nav_msgs</build_depend>  <!-- Costmap messages used by MPPI. -->
     <build_depend>visualization_msgs</build_depend>
     <build_depend>costmap_2d</build_depend>
     <build_depend>cv_bridge</build_depend>
@@ -32,7 +32,7 @@
     <exec_depend>robot_state_publisher</exec_depend>
     <exec_depend>roscpp</exec_depend>
     <exec_depend>std_msgs</exec_depend>
-    <exec_depend>nav_msgs</exec_depend>  <!-- 新增：运行时需要加载nav_msgs消息 -->
+    <exec_depend>nav_msgs</exec_depend>  <!-- Runtime dependency for costmap messages. -->
     <exec_depend>visualization_msgs</exec_depend>
     <exec_depend>costmap_2d</exec_depend>
     <exec_depend>cv_bridge</exec_depend>

@@ -43,7 +43,7 @@ public:
         delete plot;
 #endif  // COMPILE_DEBUG
     }
-    std::mutex lowStateMutex;   // 1. 全局互斥量
+    std::mutex lowStateMutex;   // Global mutex protecting the low-level state.
     
     LowlevelCmd *lowCmd;
     LowlevelState *lowState;

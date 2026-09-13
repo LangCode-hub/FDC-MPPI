@@ -300,7 +300,7 @@
       <inertia ixx="0.02448" ixy="0.00012166" ixz="0.0014849" iyy="0.098077" iyz="-3.12e-05" izz="0.107"/>
     </inertial>
   </link>
-  <!-- 激光雷达Link -->
+  <!-- LiDAR link. -->
   <link name="laser_link">
     <inertial>
       <mass value="0.1"/>
@@ -320,13 +320,13 @@
       </geometry>
     </collision>
   </link>
-  <!-- 固定关节 -->
+  <!-- Fixed joint. -->
   <joint name="laser_joint" type="fixed">
     <parent link=""/>
     <child link="laser_link"/>
     <origin rpy="  " xyz="  "/>
   </joint>
-  <!-- Gazebo激光插件 -->
+  <!-- Gazebo laser plugin. -->
   <gazebo reference="laser_link">
     <plugin filename="libgazebo_ros_laser.so" name="libgazebo_ros_laser">
       <topicName>/go2/laser/scan</topicName>
@@ -1222,4 +1222,3 @@
     </actuator>
   </transmission>
 </robot>
-

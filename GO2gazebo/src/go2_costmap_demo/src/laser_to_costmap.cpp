@@ -7,7 +7,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <cmath>
-#include <costmap_2d/cost_values.h>   // 必须加上这一行
+#include <costmap_2d/cost_values.h>   // Required for the cost constants below.
 
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -20,16 +20,16 @@ public:
     {
         ros::NodeHandle nh("~");
 
-        // 订阅激光话题
+        // Subscribe to the laser-scan topic.
         scan_sub_ = nh.subscribe("/go2/laser/scan", 1, &LaserToCostmap::scanCallback, this);
         map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("costmap", 1);
 
-        // costmap 初始化参数
-        double resolution = 0.05;   // 每个栅格0.05m
-        unsigned int cells_x = 200; // 10m(定义了 Costmap（代价地图的尺寸，地图覆盖的实际范围)
+        // Initialize the costmap parameters.
+        double resolution = 0.05;   // Each grid cell is 0.05 m.
+        unsigned int cells_x = 200; // A 200-cell grid covers 10 m at this resolution.
         unsigned int cells_y = 200; // 10m
-        //地图左下角在世界坐标 (-5, -5):
-        costmap_.reset(new costmap_2d::Costmap2D(cells_x, cells_y, resolution, -5.0, -5.0, 0)); // 中心在机器人附近
+        // Place the lower-left corner at world coordinates (-5, -5).
+        costmap_.reset(new costmap_2d::Costmap2D(cells_x, cells_y, resolution, -5.0, -5.0, 0)); // Keep the robot near the map center.
         costmap_->setDefaultValue(costmap_2d::FREE_SPACE);
 
         edt_pub_ = nh.advertise<sensor_msgs::Image>("edt_map", 1);
@@ -44,13 +44,13 @@ private:
     tf2_ros::TransformListener tf_listener_;
     std::unique_ptr<costmap_2d::Costmap2D> costmap_;
 
-    cv::Mat edt_map_;  // 存储欧氏距离变换结果
-    std::mutex edt_mutex_;  // 保护EDT地图的线程安全
+    cv::Mat edt_map_;  // Stores the Euclidean distance transform.
+    std::mutex edt_mutex_;  // Protects concurrent access to the EDT map.
 
     ros::Publisher edt_pub_;
     void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan_msg)
     {
-        // 转换 LaserScan -> PointCloud2
+        // Convert LaserScan to PointCloud2.
         sensor_msgs::PointCloud2 cloud;
         try
         {
@@ -62,17 +62,17 @@ private:
             return;
         }
 
-        // 更新 costmap
+        // Update the costmap.
         updateCostmap(cloud);
 
-        // 发布 OccupancyGrid 以便 RViz 查看
+        // Publish the OccupancyGrid for visualization in RViz.
         publishOccupancyGrid();
         publishEDTMap();
     }
 
     void updateCostmap(const sensor_msgs::PointCloud2& cloud)
     {
-        // 清空旧地图
+        // Clear the previous map.
         for (unsigned int i = 0; i < costmap_->getSizeInCellsX(); ++i)
             {
             for (unsigned int j = 0; j < costmap_->getSizeInCellsY(); ++j)
@@ -80,46 +80,46 @@ private:
                     costmap_->setCost(i, j, costmap_2d::FREE_SPACE);
                     }
             }
-        // 遍历点云，过滤过近的点（如距离小于0.3m的点视为自身结构）
-        const double MIN_OBSTACLE_DISTANCE = 0.2; // 可根据机器人尺寸调整(0.15就不行了)
-        const double ROBOT_RADIUS = 0.2;  // 新增：机器人半径
-        // 遍历点云，将点投影到 costmap
+        // Ignore points that are close enough to belong to the robot itself.
+        const double MIN_OBSTACLE_DISTANCE = 0.2; // Tune according to the robot dimensions; 0.15 m is too small here.
+        const double ROBOT_RADIUS = 0.2;  // Robot radius used for inflation.
+        // Project each point-cloud point onto the costmap.
         for (sensor_msgs::PointCloud2ConstIterator<float> iter_x(cloud, "x"), iter_y(cloud, "y");
              iter_x != iter_x.end(); ++iter_x, ++iter_y)
         {
             double wx = *iter_x;
             double wy = *iter_y;
 
-            // 过滤距离机器人过近的点（自身结构）
+            // Filter points belonging to the robot body.
             if (std::hypot(wx, wy) < MIN_OBSTACLE_DISTANCE) {
-                continue; // 跳过自身结构点
+                continue; // Skip points on the robot itself.
             }
             unsigned int mx, my;
 
-            if (costmap_->worldToMap(wx, wy, mx, my))//worldToMap是costmap_2d提供的坐标转换函数,把世界坐标转成栅格下标
-            {//zhi you 激光点(障碍)cai neng zhuan huan cheng gong(fan hui true)
+            if (costmap_->worldToMap(wx, wy, mx, my))// worldToMap converts world coordinates to grid indices.
+            {// Only laser points inside the costmap can be converted successfully.
                 costmap_->setCost(mx, my, costmap_2d::LETHAL_OBSTACLE);
 
-                // 新增：根据机器人半径膨胀障碍（转换半径为栅格数）
+                // Inflate obstacles by the robot radius, converted to grid cells.
                 int radius_cells = static_cast<int>(std::ceil(ROBOT_RADIUS / costmap_->getResolution()));
-                inflateCell(mx, my, radius_cells);  // 用机器人半径进行第一次膨胀
+                inflateCell(mx, my, radius_cells);  // First inflation pass based on the robot radius.
             }
         }
 
         
-        // 简单的膨胀（inflation）
-        const int inflation_radius = 4; // 单位：cell
+        // Apply an additional simple inflation pass.
+        const int inflation_radius = 4; // Unit: grid cells.
         for (unsigned int mx = 0; mx < costmap_->getSizeInCellsX(); ++mx)
         {
             for (unsigned int my = 0; my < costmap_->getSizeInCellsY(); ++my)
             {
                 if (costmap_->getCost(mx, my) == costmap_2d::LETHAL_OBSTACLE)
-                {//getCost是costmap_2d官方库函数,不会触发任何计算，只是从内部 unsigned char* costmap_ 数组里按索引取一个字节
+                {// getCost reads one byte from the internal costmap array without triggering computation.
                     inflateCell(mx, my, inflation_radius);
                 }
             }
         }
-        // 完成障碍物标记和膨胀后计算EDT
+        // Compute the EDT after obstacle marking and inflation.
         computeEDT();
 
     }
@@ -160,8 +160,8 @@ private:
         grid.info.origin.position.z = 0.0;
 
         grid.data.resize(grid.info.width * grid.info.height);
-        //std::cout << "地图栅格的宽度grid.info.width=" << grid.info.width << std::endl;(da yin chu lai de zhi wei 200)
-        //std::cout << "地图栅格的grid.info.origin.position.x=" << grid.info.origin.position.x << std::endl;(da yin chu lai de zhi wei -5)
+        //std::cout << "Grid width: " << grid.info.width << std::endl; // Expected value: 200.
+        //std::cout << "Grid origin x: " << grid.info.origin.position.x << std::endl; // Expected value: -5.
         for (unsigned int y = 0; y < grid.info.height; ++y)
         {
             for (unsigned int x = 0; x < grid.info.width; ++x)
@@ -180,7 +180,7 @@ private:
     }
     void computeEDT()
     {
-        // 将costmap转换为OpenCV二值图像（障碍为0，自由空间为255）
+        // Convert the costmap to an OpenCV binary image: obstacles are 0 and free space is 255.
         cv::Mat binary_map(costmap_->getSizeInCellsY(), costmap_->getSizeInCellsX(), CV_8UC1);
         
         for (unsigned int y = 0; y < costmap_->getSizeInCellsY(); ++y)
@@ -188,22 +188,22 @@ private:
             for (unsigned int x = 0; x < costmap_->getSizeInCellsX(); ++x)
             {
                 unsigned char cost = costmap_->getCost(x, y);
-                // 障碍区域设为0，自由空间设为255
+                // Encode obstacles as 0 and free space as 255.
                 binary_map.at<uchar>(y, x) = (cost == costmap_2d::LETHAL_OBSTACLE) ? 0 : 255;
             }
         }
 
-        // 计算欧氏距离变换
+        // Compute the Euclidean distance transform.
         edt_map_.create(binary_map.size(), CV_32FC1);
         cv::distanceTransform(binary_map, edt_map_, cv::DIST_L2, cv::DIST_MASK_PRECISE);
 
-        // 距离单位转换（从栅格数转为米）
+        // Convert distance units from grid cells to metres.
         edt_map_ *= costmap_->getResolution();
         
         std::lock_guard<std::mutex> lock(edt_mutex_);
     }
 
-    // 添加发布EDT地图的函数（可选，用于可视化）
+    // Publish the EDT map for optional visualization.
     void publishEDTMap()
     {
         std::lock_guard<std::mutex> lock(edt_mutex_);
@@ -230,4 +230,3 @@ int main(int argc, char** argv)
     ros::spin();
     return 0;
 }
-

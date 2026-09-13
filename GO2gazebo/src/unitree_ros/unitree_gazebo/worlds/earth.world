@@ -143,7 +143,7 @@
             <static>true</static>
             <pose>5 0.0 0.025 0 0 0</pose>
             <link name="marker_link">
-                <!-- 没有 <collision> 标签 → 不参与任何物理/激光碰撞 -->
+                <!-- No collision tag: this visual does not participate in physical or laser collisions. -->
                 <visual name="marker_visual">
                 <geometry>
                     <cylinder>
@@ -163,7 +163,7 @@
             <static>true</static>
             <pose>6.1 2 0.025 0 0 0</pose>
             <link name="marker_link">
-                <!-- 没有 <collision> 标签 → 不参与任何物理/激光碰撞 -->
+                <!-- No collision tag: this visual does not participate in physical or laser collisions. -->
                 <visual name="marker_visual">
                 <geometry>
                     <cylinder>

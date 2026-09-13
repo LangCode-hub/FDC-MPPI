@@ -26,8 +26,8 @@ bool running = true;
 void ShutDown(int sig)
 {
     std::cout << "stop the controller" << std::endl;
-    ros::shutdown();  // 关闭 ROS 节点
-    exit(0);  // 强制进程退出
+    ros::shutdown();  // Shut down the ROS node.
+    exit(0);  // Terminate the process immediately.
     running = false;
 }
 
@@ -49,9 +49,9 @@ int main(int argc, char **argv)
     /* set the print format */
     std::cout << std::fixed << std::setprecision(3);
 
-#ifdef RUN_ROS //如果编译时定义了宏 RUN_ROS
-    ros::init(argc, argv, "unitree_gazebo_servo");//就会初始化一个 ROS 节点"unitree_gazebo_servo"
-    ros::NodeHandle nh; //查看节点发布了哪些话题：rosnode info /unitree_gazebo_servo
+#ifdef RUN_ROS // Initialize ROS when the RUN_ROS macro is defined.
+    ros::init(argc, argv, "unitree_gazebo_servo");// Initialize the "unitree_gazebo_servo" ROS node.
+    ros::NodeHandle nh; // Inspect its topics with: rosnode info /unitree_gazebo_servo
 #endif // RUN_ROS
 
     IOInterface *ioInter;

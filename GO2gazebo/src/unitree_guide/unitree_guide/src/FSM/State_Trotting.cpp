@@ -5,7 +5,7 @@
 #include <iomanip>
 #include "gazebo_msgs/ModelStates.h"
 #include <ros/time.h>
-#include <gazebo_msgs/ApplyBodyWrench.h>  // 引入ApplyBodyWrench消息定义
+#include <gazebo_msgs/ApplyBodyWrench.h>  // ApplyBodyWrench message definition.
 
 
 State_Trotting::State_Trotting(CtrlComponents *ctrlComp)
@@ -17,7 +17,7 @@ State_Trotting::State_Trotting(CtrlComponents *ctrlComp)
 
     _gaitHeight = 0.08;
 
-    // 初始化MPPI控制器10.18new
+    // Initialize the MPPI controller.
     _mppi = std::make_unique<MPPI>(_nh);
 
 #ifdef ROBOT_TYPE_Go1
@@ -42,26 +42,26 @@ State_Trotting::State_Trotting(CtrlComponents *ctrlComp)
     _vyLim = _robModel->getRobVelLimitY();
     _wyawLim = _robModel->getRobVelLimitYaw();
 
-    // 初始化gazebo模型状态订阅
+    // Initialize the Gazebo model-state subscriber.
     gazebo_model_sub_ = _nh.subscribe("/gazebo/model_states", 10, 
                                      &State_Trotting::gazeboModelStatesCallback, this);
-    _gazebo_pos.setZero();  // 初始化为零
+    _gazebo_pos.setZero();  // Initialize the position to zero.
 
-    // 初始化最后控制指令
+    // Initialize the most recent control command.
     _lastOptimalControl = Control(0, 0);
     
-    // 启动MPPI线程
+    // Start the MPPI worker thread.
     _mppiRunning = true;
     _mppiThread = std::thread(&State_Trotting::mppiThreadFunc, this);
 
     _applyForceClient = _nh.serviceClient<gazebo_msgs::ApplyBodyWrench>("/gazebo/apply_body_wrench");
-    // 设置默认干扰力(可自定义大小和方向)
+    // Set the default disturbance force; its magnitude and direction are configurable.
     _disturbanceForce = Eigen::Vector3d(35, 0, 0);
 
-    // 初始化力箭头发布器
+    // Initialize the force-arrow publisher.
     _forceMarkerPub = _nh.advertise<visualization_msgs::Marker>("disturbance_force_marker", 10);
     
-    // 初始化力箭头Marker
+    // Initialize the force-arrow marker.
     initializeForceMarker();
 }
 
@@ -74,25 +74,25 @@ State_Trotting::~State_Trotting(){
 }
 
 void State_Trotting::enter(){
-    //_pcd = _est->getPosition();//设置初始目标位置 _pcd(_pcd 是期望身体位置)
+    //_pcd = _est->getPosition();// Set the initial desired body position.
     _enterTime = ros::Time::now();
     {
         std::lock_guard<std::mutex> lock(gazebo_mutex_);
         _pcd = _gazebo_pos;
     }
 
-    // 初始化时打印一次初始位置）
-    ROS_INFO("initiallllll positionnnnnnnnnnn: (%.2f, %.2f, %.2f)", _pcd.x(), _pcd.y(), _pcd.z());//初始位置赋值没问题
-    _pcd(2) = -_robModel->getFeetPosIdeal()(2, 0);//()(2, 0)函数返回矩阵后立刻取下标
-    //getFeetPosIdeal()(2,0) 给出的是“默认站立时，脚底到髋部的高度差”。
-    //前面加负号就让 _pcd(2) 变成“身体应该漂在地面以上多高”。
-    //_pcd(2)表示取这个向量的第 3 个元素
+    // Print the initial position once when entering the state.
+    ROS_INFO("initiallllll positionnnnnnnnnnn: (%.2f, %.2f, %.2f)", _pcd.x(), _pcd.y(), _pcd.z());// The initial position has been assigned correctly.
+    _pcd(2) = -_robModel->getFeetPosIdeal()(2, 0);// Read row 2, column 0 from the returned matrix.
+    // getFeetPosIdeal()(2,0) is the nominal vertical distance from a foot to its hip.
+    // Negating it gives the desired body height above the ground.
+    // _pcd(2) selects the third element of the desired-position vector.
 
-    _vCmdBody.setZero();//身体坐标系下的速度命令清零
-    _yawCmd = _lowState->getYaw();//把当前真实朝向（ yaw 角）当成“希望保持的朝向”，后面所有偏航控制都围绕这个值
-    _Rd = rotz(_yawCmd);//根据目标 yaw 生成 3×3 的旋转矩阵 _Rd，表示“希望身体最终对向哪个方向”。
-                        //rotz() 是工具函数：绕世界 z 轴旋转。
-    _wCmdGlobal.setZero();//世界坐标系下的角速度命令清零：我不想转圈。
+    _vCmdBody.setZero();// Clear the body-frame velocity command.
+    _yawCmd = _lowState->getYaw();// Use the current yaw as the heading to maintain.
+    _Rd = rotz(_yawCmd);// Build the desired 3x3 orientation matrix from the target yaw.
+                        // rotz() constructs a rotation about the global z axis.
+    _wCmdGlobal.setZero();// Clear the global-frame angular-velocity command.
 
     _ctrlComp->ioInter->zeroCmdPanel();
     _gait->restart();
@@ -121,28 +121,28 @@ FSMStateName State_Trotting::checkChange(){
 
 void State_Trotting::run(){
     {
-        std::lock_guard<std::mutex> g(gazebo_mutex_);  // 使用gazebo的互斥锁
+        std::lock_guard<std::mutex> g(gazebo_mutex_);  // Lock access to the Gazebo state.
         ros::Duration lag = ros::Time::now() - _lastGazeboTime;
         if (lag.toSec() > 0.05) {
             ROS_WARN_THROTTLE(1.0, "Gazebo pose data delayed by %.3f s", lag.toSec());
         }
-        _posBody = _gazebo_pos;  // 替换_est->getPosition()
+        _posBody = _gazebo_pos;  // Use Gazebo position instead of _est->getPosition().
     }
     
     {
         std::lock_guard<std::mutex> g(_ctrlComp->lowStateMutex);
-        _velBody = _est->getVelocity();  // 速度仍从估计器获取（如果需要）
+        _velBody = _est->getVelocity();  // Continue reading velocity from the estimator.
     }
     // ROS_INFO_THROTTLE(0.5, "Current posBody(print in run function): (%.2f, %.2f, %.2f)", 
     //                   _posBody.x(), _posBody.y(), _posBody.z());
 
     //  {
-    //     std::lock_guard<std::mutex> g(_ctrlComp->lowStateMutex);  // 加锁保护写入
+    //     std::lock_guard<std::mutex> g(_ctrlComp->lowStateMutex);  // Protect the shared state.
     //     _posBody = _est->getPosition();
     //     _velBody = _est->getVelocity();
     //     ROS_INFO_THROTTLE(0.5, "Current posBody(print in run function): (%.2f, %.2f, %.2f)", 
     //                  _posBody.x(), _posBody.y(), _posBody.z());
-    // }  // 自动释放锁
+    // }  // Release the lock automatically.
     // _posBody = _est->getPosition();
     // _velBody = _est->getVelocity();
     // ROS_INFO_THROTTLE(0.5, "Current posBody(print in run function): (%.2f, %.2f, %.2f)", 
@@ -187,10 +187,10 @@ void State_Trotting::run(){
 
 void State_Trotting::gazeboModelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg) {
     std::lock_guard<std::mutex> lock(gazebo_mutex_);
-    // 查找机器人模型索引（模型名为"go2_gazebo"）
+    // Find the robot-model index for the model named "go2_gazebo".
     for (size_t i = 0; i < msg->name.size(); ++i) {
         if (msg->name[i] == "go2_gazebo") {
-            // 提取位置信息
+            // Extract the position.
             _gazebo_pos.x() = msg->pose[i].position.x;
             _gazebo_pos.y() = msg->pose[i].position.y;
             _gazebo_pos.z() = msg->pose[i].position.z;
@@ -221,64 +221,64 @@ void State_Trotting::setHighCmd(double vx, double vy, double wz){
     _dYawCmd = wz;
 }
 
-// 添加设置目标点函数
+// Set the navigation target.
 void State_Trotting::setObstacleAvoidanceGoal(double x, double y) {
     _avoidanceGoal = Vec2(x, y);
     _mppi->setGoal(x, y);
-    _MPPICompleted = false;  // 重置完成状态（新目标开始时未完成）
+    _MPPICompleted = false;  // Reset completion state for the new target.
     ROS_INFO("set the goal point: (%.2f, %.2f)", x, y); 
 }
 
-// 添加MPPI线程函数
+// MPPI worker-thread function.
 void State_Trotting::mppiThreadFunc() {
-    ros::Rate rate(50.0);  // 设置MPPI计算频率
+    ros::Rate rate(50.0);  // Set the MPPI computation rate.
     while (_mppiRunning) {
-        // 等待新的状态
-        State current_state; //是在getUserCmd 函数下面定义的，
+        // Wait for a new state.
+        State current_state; // Populated from the queue in getUserCmd().
 
-        RotMat B2G_RotMat;          // 先留空
-        //通过线程安全队列 _stateQueue 从主线程（State_Trotting::run 或 getUserCmd 函数）传递到 mppiThreadFunc 线程
+        RotMat B2G_RotMat;          // Filled after a state becomes available.
+        // _stateQueue safely transfers snapshots from the main thread to this worker.
         if(_stateQueue.wait_and_pop(current_state)){
             {
-        // 2. 临界区：只在这几行里碰 _lowState
+        // Limit access to _lowState to this short critical section.
                 std::lock_guard<std::mutex> g(_ctrlComp->lowStateMutex);
-                B2G_RotMat = _lowState->getRotMat();   // 拿旋转矩阵
-                // 如果还需要 IMU、足端位置，也在这里一次性读完
-            } // 3. 锁在这里自动释放，后面不再碰 _lowState
-        // 获取当前旋转矩阵（需要从主线程传递或这里获取）
+                B2G_RotMat = _lowState->getRotMat();   // Read the rotation matrix.
+                // Read any additional IMU or foot state here while the lock is held.
+            } // Release the lock here and do not access _lowState below.
+        // Obtain the current rotation matrix either here or from the main-thread snapshot.
         //RotMat B2G_RotMat = _lowState->getRotMat();
-        // 计算最优控制
+        // Compute the optimal control.
         if (_obstacleAvoidanceMode) {
             //Control optimal = _mppi->getOptimalControl(current_state, B2G_RotMat);
 
             Control optimal = _mppi->getOptimalControl(current_state, _gazebo_pos.x(), _gazebo_pos.y(),B2G_RotMat);
-            //ROS_INFO("MPPI computed: vx=%.2f m/s, wz=%.2f rad/s", optimal.vx, optimal.wz);  // 先注释掉，后面再给加回来
-            //若vx始终为 0 或wz不变，说明 MPPI 未检测到障碍物（可能代价地图解析错误）。
-            //若接近障碍物时wz有明显变化（如转向），说明 MPPI 决策正常，问题在指令传递。
+            //ROS_INFO("MPPI computed: vx=%.2f m/s, wz=%.2f rad/s", optimal.vx, optimal.wz);  // Enable when debugging control output.
+            // A constant zero vx or unchanged wz may indicate that MPPI is not detecting obstacles.
+            // A changing wz near obstacles indicates that MPPI is steering and command transport should be checked next.
             _controlQueue.push(optimal);
         }
     }
-    rate.sleep();  // 按设定频率休眠
+    rate.sleep();  // Sleep at the configured rate.
     }
 }
-// 添加初始化Marker的函数
+// Initialize the force marker.
 void State_Trotting::initializeForceMarker() {
-    _forceMarker.header.frame_id = "base";  // 使用世界坐标系
+    _forceMarker.header.frame_id = "base";  // Use the base frame.
     _forceMarker.ns = "disturbance_force";
     _forceMarker.id = 0;
     _forceMarker.type = visualization_msgs::Marker::ARROW;
     _forceMarker.action = visualization_msgs::Marker::ADD;
     
-    // 设置箭头尺寸
-    _forceMarker.scale.x = 0.4;  // 箭头长度
-    _forceMarker.scale.y = 0.1; // 箭头宽度
-    _forceMarker.scale.z = 0.1;  // 箭头高度
+    // Set the arrow dimensions.
+    _forceMarker.scale.x = 0.4;  // Arrow length.
+    _forceMarker.scale.y = 0.1; // Arrow width.
+    _forceMarker.scale.z = 0.1;  // Arrow height.
     
-    // 设置箭头颜色
+    // Set the arrow color.
     _forceMarker.color.r = 1.0f;
     _forceMarker.color.g = 1.0f;
     _forceMarker.color.b = 0.0f;
-    _forceMarker.color.a = 1.0;  // 不透明度
+    _forceMarker.color.a = 1.0;  // Opacity.
 }
 
 void State_Trotting::updateForceMarker() {
@@ -288,16 +288,16 @@ void State_Trotting::updateForceMarker() {
         _forceMarker.color.a = 1.0;
         _forceMarker.header.stamp = ros::Time::now();
         
-        // 机体坐标系下的位置：身后1米（x=-1），y=0（正中间），z=0.2（离地高度）
-        _forceMarker.pose.position.x = -1.0;  // x负方向为身后
+        // Place the marker 1 m behind the body center and 0.2 m above the ground.
+        _forceMarker.pose.position.x = -1.0;  // Negative x points behind the robot.
         _forceMarker.pose.position.y = 0.0;
         _forceMarker.pose.position.z = 0.2;
         
-        // 力的方向：基于机体坐标系（直接使用_force的分量，无需转换旋转）
+        // Express the force direction in the body frame without an additional rotation.
         Eigen::Vector3d forceDir = _disturbanceForce.normalized();
-        // 计算从机体坐标系z轴到力方向的旋转（因力是基于机体坐标系施加的）
+        // Orient the marker toward the body-frame force direction.
         tf2::Quaternion quat;
-        quat.setRPY(0, 0, atan2(forceDir.y(), forceDir.x()));  // 仅考虑xy平面内的方向
+        quat.setRPY(0, 0, atan2(forceDir.y(), forceDir.x()));  // Consider only the xy-plane direction.
         _forceMarker.pose.orientation.x = quat.x();
         _forceMarker.pose.orientation.y = quat.y();
         _forceMarker.pose.orientation.z = quat.z();
@@ -306,40 +306,40 @@ void State_Trotting::updateForceMarker() {
     _forceMarkerPub.publish(_forceMarker);
 }
 void State_Trotting::getUserCmd(){
-// 添加避障模式开关 (使用4按键)
+// Enable obstacle-avoidance mode with key 4.
     if (_lowState->userCmd == UserCommand::START && !_obstacleAvoidanceMode && !_MPPICompleted) {
         _obstacleAvoidanceMode = true;
         ROS_INFO("Obstacle avoidance mode: %s", _obstacleAvoidanceMode ? "ON" : "OFF");
     }
 
-    // 仅在避障模式开启时判断是否到达目标
+    // Check target completion only while obstacle-avoidance mode is active.
     if (_obstacleAvoidanceMode && !_MPPICompleted) {
-        // 获取机器人当前位置（假设从估计器获取x, y坐标）
+        // Obtain the current robot position from the estimator if needed.
         // Eigen::Vector3d currentPos = _est->getPosition(); 
         // Eigen::Vector2d currentXY(currentPos.x(), currentPos.y());
 
-        // 获取机器人当前位置（加锁保护共享资源访问）
+        // Read the current Gazebo position while protecting shared access.
         Eigen::Vector3d currentPos;
         {
-            std::lock_guard<std::mutex> g(gazebo_mutex_);  // 使用gazebo的锁
+            std::lock_guard<std::mutex> g(gazebo_mutex_);  // Lock access to the Gazebo position.
             currentPos = _gazebo_pos;
 
-            // ROS_INFO_THROTTLE(0.2,  // 每0.2秒打印一次，避免刷屏
+            // ROS_INFO_THROTTLE(0.2,  // Print at most once every 0.2 seconds.
             // "current position: (%.2f, %.2f), goal point: (%.2f, %.2f)",
             // currentPos.x(), currentPos.y(),_avoidanceGoal.x(), _avoidanceGoal.y());
         }
         // {
-        // std::lock_guard<std::mutex> g(_ctrlComp->lowStateMutex);  // 加锁临界区
-        // currentPos = _est->getPosition();  // 安全读取位置
+        // std::lock_guard<std::mutex> g(_ctrlComp->lowStateMutex);  // Enter the protected section.
+        // currentPos = _est->getPosition();  // Read the position safely.
 
-        // ROS_INFO_THROTTLE(0.2,  // 每0.2秒打印一次，避免刷屏
+        // ROS_INFO_THROTTLE(0.2,  // Print at most once every 0.2 seconds.
         // "current position: (%.2f, %.2f), goal point: (%.2f, %.2f)",
         // currentPos.x(), currentPos.y(),_avoidanceGoal.x(), _avoidanceGoal.y()); 
-        // }  // 自动释放锁
+        // }  // Release the lock automatically.
         
         Eigen::Vector2d currentXY(currentPos.x(), currentPos.y());
 
-        // ROS_INFO_THROTTLE(0.2,  // 每0.2秒打印一次，避免刷屏
+        // ROS_INFO_THROTTLE(0.2,  // Print at most once every 0.2 seconds.
         // "current position: (%.2f, %.2f), goal point: (%.2f, %.2f), distance between them: %.2f",
         // currentPos.x(), currentPos.y(),_avoidanceGoal.x(), _avoidanceGoal.y(),(currentXY - _avoidanceGoal).norm()
         // );  
@@ -354,98 +354,98 @@ void State_Trotting::getUserCmd(){
         }
     }
 
-        //到达目标后，速度指令为0
+        // Set velocity commands to zero after reaching the target.
     if (_MPPICompleted) {
-        // 清零线速度和角速度指令（根据实际变量名调整）
+        // Clear the linear- and angular-velocity commands.
         //ROS_INFO("2222222222Obstacle avoidance mode: %s", _obstacleAvoidanceMode ? "ON" : "OFF");
         ROS_INFO_THROTTLE(0.5, "2222222222Obstacle avoidance mode: %s",
                   _obstacleAvoidanceMode ? "ON" : "OFF");
-        _vCmdBody.setZero();  // 假设_vCmdBody是身体线速度指令（x, y, z）
-        _dYawCmd = 0.0;       // 假设_dYawCmd是偏航角速度指令
+        _vCmdBody.setZero();  // Body-frame linear-velocity command (x, y, z).
+        _dYawCmd = 0.0;       // Yaw-rate command.
         _obstacleAvoidanceMode = false;
 
     }   
     
-    // 避障模式
+    // Obstacle-avoidance mode.
     // if (_obstacleAvoidanceMode) {
-    //     // 获取当前机器人状态 (x, y, yaw)(理应是全局坐标系)
-    //     State current_state(//run函数传进来的
+    //     // Obtain the current robot state (x, y, yaw) in the global frame.
+    //     State current_state(// Values supplied by run().
     //         _posBody(0), 
     //         _posBody(1), 
     //         _yaw
     //     );
-    //     // 获取机体到全局的旋转矩阵
+    //     // Obtain the body-to-global rotation matrix.
     //     //RotMat B2G_RotMat = _lowState->getRotMat();
         
     //     _stateQueue.push(current_state);
         
-    //     // 尝试获取最新控制指令
+    //     // Try to read the latest control command.
     //     Control new_control;
     //     if (_controlQueue.try_pop(new_control)) {
     //         _lastOptimalControl = new_control;
     //     }
 
-    //     // 将MPPI计算的全局坐标系控制量转换到机体坐标系
+    //     // Convert the MPPI control from the global frame to the body frame.
     //     // Eigen::Vector2d vel_global(_lastOptimalControl.vx, 0);
     //     // Eigen::Vector2d vel_body = B2G_RotMat.transpose().block<2,2>(0,0) * vel_global;
 
-    //     // 使用最新控制指令
+    //     // Apply the latest control command.
     //     _vCmdBody(0) = _lastOptimalControl.vx;
     //     _vCmdBody(1) = 0;
     //     _dYawCmd = _lastOptimalControl.wz;
     // }
     if (_obstacleAvoidanceMode) {
-    /* ---------- 1. 一次性快照（带锁） ---------- */
+    /* ---------- 1. Take one locked snapshot. ---------- */
     State snap;
     RotMat B2G_RotMat;
     {
-        std::lock_guard<std::mutex> g1(gazebo_mutex_);      // gazebo位置锁
+        std::lock_guard<std::mutex> g1(gazebo_mutex_);      // Gazebo-position lock.
 
-        std::lock_guard<std::mutex> g2(_ctrlComp->lowStateMutex);   // 临界区开始
+        std::lock_guard<std::mutex> g2(_ctrlComp->lowStateMutex);   // Begin the protected section.
         // snap.x   = _posBody(0);
         // snap.y   = _posBody(1);
 
-        snap.x   = _gazebo_pos.x();  // 使用gazebo位置
+        snap.x   = _gazebo_pos.x();  // Use the Gazebo position.
         snap.y   = _gazebo_pos.y();
         snap.yaw = _yaw;
-        B2G_RotMat = _lowState->getRotMat();   // 拿旋转矩阵
-    }                                                          // 临界区结束
+        B2G_RotMat = _lowState->getRotMat();   // Read the rotation matrix.
+    }                                                          // End the protected section.
 
-    /* ---------- 2. 把快照扔进队列 ---------- */
-    _stateQueue.push(snap);   // MPPI 线程会拿到完全一致的一组数据
+    /* ---------- 2. Push the snapshot into the queue. ---------- */
+    _stateQueue.push(snap);   // The MPPI thread receives a consistent snapshot.
 
-    /* ---------- 3. 拿控制量（无锁，队列里已是拷贝） ---------- */
+    /* ---------- 3. Read a copied control command without locking. ---------- */
     Control new_control;
     if (_controlQueue.try_pop(new_control)) {
         _lastOptimalControl = new_control;
     }
 
     double ramp = std::min(1.0, std::max(0.0, (ros::Time::now() - _enterTime).toSec() / 1.1));
-    /* ---------- 4. 应用控制量 ---------- */
+    /* ---------- 4. Apply the control command. ---------- */
     _vCmdBody(0) = ramp*_lastOptimalControl.vx;
     _vCmdBody(1) = 0.0;
     _dYawCmd     = ramp*_lastOptimalControl.wz;
     }
-        // // 使用转换坐标系后的控制指令
+        // // Apply the frame-transformed control command.
         // _vCmdBody(0) = vel_body.x();
         // _vCmdBody(1) = 0;  
         // _dYawCmd = _lastOptimalControl.wz;
         //ROS_INFO("MPPI computed: vx=%.2f m/s, wz=%.2f rad/s", _vCmdBody(0), _dYawCmd); zhe li da yin chu lai de zhi ye hen xiao,dan shi ping hua
         
-        // // 调用MPPI获取最优控制量
+        // // Call MPPI to obtain the optimal control.
         // Control optimal = _mppi->getOptimalControl(current_state);
         
-        // 设置控制命令
+        // Set the control command.
         // _vCmdBody(0) = optimal.vx;
-        // _vCmdBody(1) = 0;  // 避障模式下不进行侧向移动
+        // _vCmdBody(1) = 0;  // Disable lateral motion during obstacle avoidance.
         // _dYawCmd = optimal.wz;
         bool currentL2XPressed = (_lowState->userCmd == UserCommand::L2_X);
         if (currentL2XPressed && !_lastL2XPressed && !_applyingForce) {
         //if (_lowState->userCmd == UserCommand::L2_X && !_applyingForce) {
         _applyingForce = true;
-        _forceStartTime = ros::Time::now();  // 记录开始时间
+        _forceStartTime = ros::Time::now();  // Record the start time.
         
-        // 仅调用一次服务，设置持续时间
+        // Call the service once and set the requested duration.
         gazebo_msgs::ApplyBodyWrench srv;
         srv.request.body_name = "base";
         srv.request.reference_frame = "base";  //
@@ -456,34 +456,34 @@ void State_Trotting::getUserCmd(){
         srv.request.wrench.torque.y = 0.0;
         srv.request.wrench.torque.z = 0.0;
         srv.request.start_time = _forceStartTime;
-        srv.request.duration = ros::Duration(2.0);  // 持续时间
+        srv.request.duration = ros::Duration(2.0);  // Force duration.
         
         if (!_applyForceClient.call(srv)) {
             ROS_ERROR("Failed to apply disturbance force!");
-            _applyingForce = false;  // 调用失败则重置
+            _applyingForce = false;  // Reset the flag if the service call fails.
         } else {
             ROS_INFO("Disturbance force applied for 0.2s");
         }
         
     }
     _lastL2XPressed = currentL2XPressed;
-    // 仅在力的持续时间结束后重置标志（无需重复调用服务）
+    // Reset the flag after the force duration without repeating the service call.
     if (_applyingForce && (ros::Time::now() - _forceStartTime).toSec() >= 2.0) {
         _applyingForce = false;
         ROS_INFO("Disturbance force ended");
     }
-    // 新增：更新并发布力箭头Marker
+    // Update and publish the force-arrow marker.
     updateForceMarker();
 }
 
 void State_Trotting::calcCmd(){
     /* Movement */
-    _vCmdGlobal = _B2G_RotMat * _vCmdBody;//转为全局坐标系,_vCmdBody是机体坐标系下的速度指令
+    _vCmdGlobal = _B2G_RotMat * _vCmdBody;// Convert the body-frame velocity command to the global frame.
 
     _pcd(0) = _pcd(0) + _vCmdGlobal(0) * _ctrlComp->dt;
-    //表示机器人在全局坐标系中x轴方向的目标位置坐标
+    // Integrate the desired global x position.
     _pcd(1) = _pcd(1) + _vCmdGlobal(1) * _ctrlComp->dt;
-    //表示机器人在全局坐标系中y轴方向的目标位置坐标
+    // Integrate the desired global y position.
 
 //jiang su du ji fen de dao wei zhi
     _vCmdGlobal(2) = 0;
@@ -491,20 +491,20 @@ void State_Trotting::calcCmd(){
     /* Turning */
     _yawCmd = _yawCmd + _dYawCmd * _ctrlComp->dt;
 
-    _Rd = rotz(_yawCmd);//_yawCmd是机器人的期望偏航角,_Rd是期望的旋转矩阵,
-    //通过rotz(_yawCmd)（绕 z 轴旋转的旋转矩阵），将偏航角指令转换为旋转矩阵_Rd
-    //后续可通过_Rd与当前姿态矩阵（_G2B_RotMat）的偏差计算姿态控制量
+    _Rd = rotz(_yawCmd);// _yawCmd is the desired yaw and _Rd is the desired orientation matrix.
+    // Convert the yaw command into a rotation matrix about the z axis.
+    // The difference between _Rd and _G2B_RotMat is used to compute attitude control.
     _wCmdGlobal(2) = _dYawCmd;//(2)biao shi z zhou jiao su du ming ling
 }
 
 void State_Trotting::calcTau(){
-    _posError = _pcd - _posBody;//世界坐标系下目标位置-当前位置  _posBody = _gazebo_pos;
+    _posError = _pcd - _posBody;// Desired minus current position in the global frame; _posBody = _gazebo_pos.
     _velError = _vCmdGlobal - _velBody;
 
     _ddPcd = _Kpp * _posError + _Kdp * _velError;
     _dWbd  = _kpw*rotMatToExp(_Rd*_G2B_RotMat) + _Kdw * (_wCmdGlobal - _lowState->getGyroGlobal());
-    //_wCmdGlobal：全局坐标系下的期望角速度指令（目标角速度）
-    //_lowState->getGyroGlobal()：当前全局坐标系下的实际角速度
+    //_wCmdGlobal: desired angular velocity in the global frame.
+    //_lowState->getGyroGlobal(): measured angular velocity in the global frame.
     _ddPcd(0) = saturation(_ddPcd(0), Vec2(-3, 3));
     _ddPcd(1) = saturation(_ddPcd(1), Vec2(-3, 3));
     _ddPcd(2) = saturation(_ddPcd(2), Vec2(-5, 5));
@@ -540,4 +540,3 @@ void State_Trotting::calcQQd(){
     _qGoal = vec12ToVec34(_robModel->getQ(_posFeet2BGoal, FrameType::BODY));
     _qdGoal = vec12ToVec34(_robModel->getQd(_posFeet2B, _velFeet2BGoal, FrameType::BODY));
 }
-

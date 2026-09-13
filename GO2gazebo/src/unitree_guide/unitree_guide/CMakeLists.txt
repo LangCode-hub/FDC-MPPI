@@ -35,9 +35,9 @@ if(SIMULATION OR MOVE_BASE)
 endif()
 
 #set(CMAKE_CXX_STANDARD 11)
-# 修改后（正确）
+# Require C++14 for the controller implementation.
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)  # 强制要求编译器支持C++14，避免版本兼容问题
+set(CMAKE_CXX_STANDARD_REQUIRED ON)  # Prevent fallback to an older, incompatible standard.
 find_package(Boost)
 
 if(CATKIN_MAKE)
@@ -64,7 +64,7 @@ if(CATKIN_MAKE)
             # gazebo
         )
     endif()
-    find_package(OpenCV 4 REQUIRED)  # 单独添加，放在catkin之前或之后均可，但建议放在系统级依赖区域
+    find_package(OpenCV 4 REQUIRED)  # OpenCV is a system-level dependency.
     find_package(catkin REQUIRED COMPONENTS
         genmsg
         robot_state_publisher
@@ -74,17 +74,17 @@ if(CATKIN_MAKE)
         geometry_msgs
         unitree_legged_msgs
         nav_msgs
-        # 新增：如果MPPI需要订阅代价地图，添加nav_msgs依赖
-        cv_bridge  # 新增：ROS与OpenCV图像转换依赖
-    	sensor_msgs  # 新增：EDT图像消息依赖
-	    costmap_2d  # 新增：代价地图相关依赖（若之前未加）
+        # Dependencies used by the MPPI costmap and EDT interfaces.
+        cv_bridge  # Conversion between ROS images and OpenCV matrices.
+	    sensor_msgs  # EDT image messages.
+	    costmap_2d  # Costmap support.
 	    gazebo_msgs
 	    tf2
     )
     catkin_package(
         CATKIN_DEPENDS 
         unitree_legged_msgs 
-        nav_msgs  # 新增：代价地图消息依赖
+        nav_msgs  # Costmap message dependency.
         visualization_msgs
         DEPENDS OpenCV
     )
@@ -95,10 +95,10 @@ include_directories(
     ${Boost_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
     ${GAZEBO_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}  # 新增：Eigen头文件目录
-    ${OpenCV_INCLUDE_DIRS}  # 新增：OpenCV头文件目录
-    /usr/include/opencv4  # 第一个路径
-    /usr/include/opencv4/opencv  # 第二个路径
+    ${EIGEN3_INCLUDE_DIRS}  # Eigen headers.
+    ${OpenCV_INCLUDE_DIRS}  # OpenCV headers.
+    /usr/include/opencv4  # Primary OpenCV 4 include path.
+    /usr/include/opencv4/opencv  # Secondary OpenCV 4 include path.
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS} -O3")
@@ -142,7 +142,7 @@ add_executable(junior_ctrl src/main.cpp ${SRC_LIST})
 if(CATKIN_MAKE)
     target_link_libraries(junior_ctrl 
     ${catkin_LIBRARIES}
-    ${OpenCV_LIBRARIES}  # 新增：链接OpenCV库
+    ${OpenCV_LIBRARIES}  # Link against OpenCV.
     )
     add_dependencies(junior_ctrl ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 endif()

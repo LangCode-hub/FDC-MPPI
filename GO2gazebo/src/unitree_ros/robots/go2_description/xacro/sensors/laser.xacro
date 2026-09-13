@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="go2_laser" params="parent_link x y z r p yaw">
-    <!-- 激光雷达Link -->
+    <!-- LiDAR link. -->
     <link name="laser_link">
       <inertial>
         <mass value="0.1"/>
@@ -15,13 +15,13 @@
         <geometry><cylinder length="0.1" radius="0.05"/></geometry>
       </collision>
     </link>
-    <!-- 固定关节 -->
+    <!-- Fixed joint. -->
     <joint name="laser_joint" type="fixed">
       <parent link="trunk"/>
       <child link="laser_link"/>
       <origin xyz="${x} ${y} ${z}" rpy="${r} ${p} ${yaw}"/>
     </joint>
-    <!-- Gazebo激光插件 -->
+    <!-- Gazebo laser plugin. -->
     <gazebo reference="laser_link">
   <sensor type="ray" name="laser_sensor">
     <always_on>true</always_on>
@@ -50,4 +50,3 @@
 </gazebo>
   </xacro:macro>
 </robot>
-
