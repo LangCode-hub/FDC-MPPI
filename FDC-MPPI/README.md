@@ -161,6 +161,14 @@ temperature, and cost weights are initialized in the `MPPI` constructor in
 `MPPI.cpp`. Costmap resolution and inflation parameters are defined in
 `laser_to_costmap.cpp`. Rebuild the workspace after changing C++ parameters.
 
+### Testing the MPPI baseline
+
+To evaluate the MPPI baseline without disturbance compensation, set the three
+FR-MHE-estimated compensation coefficients `mu1`, `mu2`, and `mu3` to `1.0` in
+`src/unitree_guide/unitree_guide/src/control/MPPI.cpp`. This makes `k1 = k2 = 1`
+and disables the disturbance-compensation effect while leaving the rest of the
+controller unchanged.
+
 ## Notes
 
 - This is research code intended for simulation and reproducibility, not a
