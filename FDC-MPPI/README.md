@@ -11,7 +11,7 @@ The release provides the FDC-MPPI local obstacle-avoidance simulation used with
 a Unitree GO2 model. It includes FR-MHE disturbance-coefficient estimation,
 laser-scan costmap construction, an Euclidean distance transform (EDT), MPPI
 trajectory sampling and visualization, robot-state logging, the quadruped
-controller, and a Gazebo disturbance-force test.
+controller.
 
 ## Repository layout
 
@@ -131,7 +131,6 @@ Focus Terminal 4 and use the following keys:
 | --- | --- |
 | `2` | Switch from Passive to FixedStand |
 | `4` | Switch from FixedStand to Trotting and enable MPPI navigation |
-| `3` | Apply the configured Gazebo disturbance force |
 | `1` | Return to Passive |
 | Space | Clear manual command input |
 
@@ -152,7 +151,6 @@ The main interfaces are:
 | `/unitree_gazebo_servo/mppi_global_control` | Global MPPI control command |
 | `~mppi_trajectories` | Sampled trajectories (`MarkerArray`) |
 | `~mppi_optimal_trajectory` | Selected trajectory (`Marker`) |
-| `/gazebo/apply_body_wrench` | Disturbance-force service |
 
 ## Configuration
 
