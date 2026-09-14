@@ -181,15 +181,16 @@ temperature, and cost weights are initialized in the `MPPI` constructor in
 If this code is useful in your research, please cite:
 
 ```bibtex
-@article{cai2026fdcmppi,
-  title   = {FDC-MPPI: Fast Disturbance-Compensated MPPI for Onboard Quadruped Navigation in Cluttered and Disturbed Environments},
-  author  = {Cai, Jialang and Lu, Jiaheng and Su, Jinya and Huang, Lingying and Li, Shihua},
-  year    = {2026}
+@inproceedings{cai2026fdcmppi,
+  title     = {FDC-MPPI: Fast Disturbance-Compensated MPPI for Onboard Quadruped Navigation in Cluttered and Disturbed Environments},
+  author    = {Cai, Jialang and Lu, Jiaheng and Su, Jinya and Huang, Lingying and Li, Shihua},
+  booktitle = {2026 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year      = {2026}
 }
 ```
 
-Please replace the entry above with the final proceedings citation when it is
-available.
+Page numbers and the DOI can be added after the conference proceedings are
+published.
 
 ## License and acknowledgements
 
