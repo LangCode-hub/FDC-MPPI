@@ -124,12 +124,22 @@ body {
 
 
 /* Publication Content Styling */
+.container.is-max-desktop.publication-header-container {
+    max-width: 1152px;
+}
+
 .publication-title {
     font-family: 'Inter', sans-serif !important;
     font-weight: 800 !important;
     color: var(--text-primary) !important;
     margin-bottom: 2rem !important;
     line-height: 1.1 !important;
+}
+
+@media screen and (min-width: 1200px) {
+  .publication-header-container .publication-title {
+    text-wrap: balance;
+  }
 }
 
 .publication-banner {
