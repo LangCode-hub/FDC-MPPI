@@ -82,6 +82,16 @@ body {
     margin: 8px 4px;
 }
 
+.publication-links .button .icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.publication-links .button .icon svg,
+.publication-links .button .icon i {
+    font-size: 1.375rem;
+}
+
 .dnerf {
   font-variant: small-caps;
 }
